@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useWikiStore } from "@/stores/wiki-store"
 import { useReviewStore } from "@/stores/review-store"
-import { runStructuralLint, runSemanticLint, type LintResult } from "@/lib/lint"
+import { runStructuralLint, runSemanticLint, appendLintLog, type LintResult } from "@/lib/lint"
 import { readFile, writeFile, deleteFile, listDirectory } from "@/commands/fs"
 import { normalizePath } from "@/lib/path-utils"
 
@@ -56,6 +56,7 @@ export function LintView() {
 
       setResults(all)
       setHasRun(true)
+      await appendLintLog(pp, all)
     } catch (err) {
       console.error("Lint failed:", err)
     } finally {
