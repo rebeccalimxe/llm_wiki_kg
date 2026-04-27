@@ -1,4 +1,4 @@
-import { readFile, listDirectory } from "@/commands/fs"
+import { readFile, writeFile, listDirectory } from "@/commands/fs"
 import { streamChat } from "@/lib/llm-client"
 import type { LlmConfig } from "@/stores/wiki-store"
 import type { FileNode } from "@/types/wiki"
@@ -296,4 +296,30 @@ export async function runSemanticLint(
   })
 
   return results
+}
+
+// ── Lint log ──────────────────────────────────────────────────────────────────
+
+export async function appendLintLog(
+  projectPath: string,
+  results: LintResult[],
+): Promise<void> {
+  const logPath = `${normalizePath(projectPath)}/lint.log`
+
+  let existing = ""
+  try {
+    existing = await readFile(logPath)
+  } catch {
+    // file doesn't exist yet — start fresh
+  }
+
+  const timestamp = new Date().toISOString()
+  const summary = results.length === 0 ? "PASS" : `${results.length} issue(s)`
+  const lines = [`[${timestamp}] lint: ${summary}`]
+  for (const r of results) {
+    lines.push(`  [${r.severity}] ${r.type}: ${r.page} — ${r.detail}`)
+  }
+  lines.push("")
+
+  await writeFile(logPath, existing + lines.join("\n"))
 }
